@@ -1,6 +1,7 @@
 import os
 import json
 import operator
+import xml.etree.ElementTree as ET
 
 
 # функция опредялющая в качестве ключа сортировки длинну значения списка
@@ -8,30 +9,46 @@ def length(list_item):
     return len(list_item)
 
 
+# функция заполняет слова в словарь из переданной строки
+def count_words(result, description):
+    # получаем все слова новости, разделяя их по пробелу
+    words = description.split(' ')
+
+    # сортируем список с функцией-ключом по длине слова
+    words.sort(key=length, reverse=True)
+
+    # формируем результат, добавляя слова и подсчитывая вхождения
+    for word in words:
+        if len(word) >= 6:
+            if result.get(word) is None:
+                result[word] = 0
+            result[word] += 1
+        else:
+            break
+
+    return result
+
+
 # функция получающая все слова с количеством упоминаний
 def get_all_words(path):
     # определяем переменную - результат выполнения функции
     result = {}
 
-    with open(path, 'rb') as fp:
-        # читаем json файл
-        file_data = json.load(fp)
+    if '.xml' in path:
+        # xml, дополнительное задание
+        tree = ET.parse(path)
 
-        for news in file_data['rss']['channel']['items']:
-            # получаем все слова новости, разделяя их по пробелу
-            words = news['description'].split(' ')
+        descriptions = tree.findall('channel/item/description')
+        for description in descriptions:
+            result = count_words(result, description.text)
+    else:
+        # json
+        with open(path, 'rb') as fp:
+            file_data = json.load(fp)
 
-            # сортируем список с функцией-ключом по длине слова
-            words.sort(key=length, reverse=True)
+            for news in file_data['rss']['channel']['items']:
+                result = count_words(result, news['description'])
 
-            # формируем результат, добавляя слова и подсчитывая вхождения
-            for word in words:
-                if len(word) >= 6:
-                    if result.get(word) is None:
-                        result[word] = 0
-                    result[word] += 1
-                else:
-                    break
     return result
 
 
@@ -73,9 +90,9 @@ def main():
             file_name, file_extension = os.path.splitext(path)
 
             # обрабатываем только файлы json
-            if file_extension.lower() == '.json':
+            if file_extension.lower() == '.json' or file_extension.lower() == '.xml':
                 # получаем список самых длинных слов (не более 10 слов, длиной от 6 символов)
-                words = get_words(path)
+                words = get_words(os.path.join(current_dir, path))
 
                 # выводим имя обработанного файла
                 print('Файл:', path, 'самые частые', len(words), 'слов:')
