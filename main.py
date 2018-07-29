@@ -8,6 +8,7 @@ def length(list_item):
     return len(list_item)
 
 
+# функция получающая все слова с количеством упоминаний
 def get_all_words(path):
     # определяем переменную - результат выполнения функции
     result = {}
@@ -34,6 +35,7 @@ def get_all_words(path):
     return result
 
 
+# функция получающая первых 10 слов с максимальным числом упоминаний
 def get_words(path):
     # получаем словарь всех слов с частотой использования
     words = get_all_words(path)
